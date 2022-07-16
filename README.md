@@ -32,7 +32,7 @@ sudo passwd www
 ## Init — must-have packages & ZSH
 
 ```
-sudo apt-get install -y zsh tree redis-server nginx zlib1g-dev libbz2-dev libreadline-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev liblzma-dev python3-dev python-imaging python3-lxml libxslt-dev python-libxml2 python-libxslt1 libffi-dev libssl-dev python-dev gnumeric libsqlite3-dev libpq-dev libxml2-dev libxslt1-dev libjpeg-dev libfreetype6-dev libcurl4-openssl-dev supervisor
+sudo apt-get install -y zsh tree redis-server nginx zlib1g-dev libbz2-dev libreadline-dev llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev liblzma-dev python3-dev python-imaging python3-lxml libffi-dev libssl-dev python-dev gnumeric libsqlite3-dev libpq-dev libxml2-dev libxslt1-dev libjpeg-dev libfreetype6-dev libcurl4-openssl-dev supervisor
 ```
 
 Install [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh):
@@ -48,16 +48,16 @@ vim ~/.zshrc
     alias cls="clear"
 ```
 
-## Install python 3.7
+## Install python 3.10
 
 mkdir ~/code
 
-Build from source python 3.7, install with prefix to ~/.python folder:
+Build from source python 3.10, install with prefix to ~/.python folder:
 
 ```
-wget https://www.python.org/ftp/python/3.7.3/Python-3.7.3.tgz ; \
-tar xvf Python-3.7.* ; \
-cd Python-3.7.3 ; \
+wget https://www.python.org/ftp/python/3.10.5/Python-3.10.5.tgz ; \
+tar xvf Python-3.10.* ; \
+cd Python-3.10.5 ; \
 mkdir ~/.python ; \
 ./configure --enable-optimizations --prefix=/home/www/.python ; \
 make -j8 ; \
@@ -159,22 +159,27 @@ Now recommended way is using Systemd instead of supervisor. If you need supervis
 sudo apt install supervisor
 
 vim /home/www/code/project/bin/start_gunicorn.sh
-	#!/bin/bash
-	source /home/www/code/project/env/bin/activate
-	source /home/www/code/project/env/bin/postactivate
-	exec gunicorn  -c "/home/www/code/project/gunicorn_config.py" project.wsgi
+
+#!/bin/bash
+source /home/www/code/project/env/bin/activate
+exec gunicorn  -c "/home/www/code/project/gunicorn_config.py" project.wsgi
 
 chmod +x /home/www/code/project/bin/start_gunicorn.sh
 
 vim project/supervisor.salesbeat.conf
-	[program:www_gunicorn]
-	command=/home/www/code/project/bin/start_gunicorn.sh
-	user=www
-	process_name=%(program_name)s
-	numprocs=1
-	autostart=true
-	autorestart=true
-	redirect_stderr=true
+
+[program:gunicorn]
+environment=PYTHONPATH=/home/voodooley/sites/staging.voodootech.ru/
+command=/home/voodooley/sites/staging.voodootech.ru/bin/start_gunicorn.sh
+user=voodooley
+process_name=%(program_name)s
+numproc=1
+autostart=1
+autorestart=1
+redirect_stderr=true
+stdout_logfile=/home/voodooley/sites/staging.voodootech.ru/logs/process.log
+stderr_logfile=/home/voodooley/sites/staging.voodootech.ru/logs/process.log.error
+
 ```
 
 If you need some Gunicorn example config — welcome:
@@ -188,4 +193,26 @@ user = 'www'
 limit_request_fields = 32000
 limit_request_field_size = 0
 raw_env = 'DJANGO_SETTINGS_MODULE=project.settings'
+```
+
+## NGINX conf
+```
+server {
+    listen 80;
+    server_name staging.voodootech.ru;
+    client_max_body_size 100M;
+    
+
+        location /static {
+                alias /home/voodooley/sites/staging.voodootech.ru/static;
+        }
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header X-Forwarded-Host $server_name;
+        proxy_set_header X-Real-IP $remote_addr;
+        add_header P3P 'CP="ALL DSP COR PSAa PSDa OUR NOR ONL UNI COM NAV"';
+        add_header Access-Control-Allow-Origin *;
+    }
+}
 ```
