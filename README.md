@@ -64,10 +64,10 @@ make -j8 ; \
 sudo make altinstall
 ```
 
-Now python3.7 in `/home/www/.python/bin/python3.7`. Update pip:
+Now python3.10 in `/home/www/.python/bin/python3.10`. Update pip:
 
 ```
-sudo /home/www/.python/bin/python3.7 -m pip install -U pip
+sudo /home/www/.python/bin/python3.10 -m pip install -U pip
 ```
 
 Ok, now we can pull our project from Git repository (or create own), create and activate Python virtual environment:
@@ -76,20 +76,20 @@ Ok, now we can pull our project from Git repository (or create own), create and 
 cd code
 git pull project_git
 cd project_dir
-python3.7 -m venv env
+python3.10 -m venv venv
 . ./env/bin/activate
 ```
 
 ## Install and configure PostgreSQL
 
-Install PostgreSQL 11 and configure locales.
+Install PostgreSQL 14 and configure locales.
 
 ```
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - ; \
 RELEASE=$(lsb_release -cs) ; \
 echo "deb http://apt.postgresql.org/pub/repos/apt/ ${RELEASE}"-pgdg main | sudo tee  /etc/apt/sources.list.d/pgdg.list ; \
 sudo apt update ; \
-sudo apt -y install postgresql-11 ; \
+sudo apt -y install postgresql-14 ; \
 sudo localedef ru_RU.UTF-8 -i ru_RU -fUTF-8 ; \
 export LANGUAGE=ru_RU.UTF-8 ; \
 export LANG=ru_RU.UTF-8 ; \
